@@ -183,9 +183,9 @@ class MainHandler(webapp2.RequestHandler):
 	    'displayName':"Reset",
 	    'iconUrl': 'http://www.iaza.com/work/130421C/iaza14708834550500.gif'}]
 	},
-	{
-        'action': 'DELETE',
-	}
+	{'action': 'SHARE'},
+	{'action': 'TOGGLE_PINNED'},
+	{'action': 'DELETE'}
       ]
     }
     body['text'] = [self.request.get('name') + ": " + self.request.get('num')]

@@ -18,25 +18,40 @@ limitations under the License.
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Glassware Counter</title>
-  <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet"
-        media="screen">
 
+  <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet" media="screen">
   <style>
     input{
-    width:100%;
+      width:100%;
     }
     .row{
-    margin-bottom:10px;
+      margin-bottom:10px;
     }
     .span1, .span2,.span4,.span6,.span8 {
       margin-right:10px;
       text-align:center;
     }
-
     form{
-  display:inline;
-}
+      display:inline;
+    }
   </style>
+  <script type='text/javascript' src='http://code.jquery.com/jquery-1.7.1.js'></script>
+  <script type='text/javascript'>
+    // bootstrap loads a different version of jQuery, so we need to create a seperate
+    // namespace so that bootstrap does not conflict.
+    var jQ = jQuery.noConflict();
+  </script>
+  <script type='text/javascript' src="/static/bootstrap/js/bootstrap.js"></script>
+  <script type='text/javascript' src="/static/bootstrap/js/bootstrap-button.js"></script>
+
+  <script type='text/javascript'>
+    jQ(window).load(function () {
+      jQ('.load').on('click', function () {
+	jQ(this).button('loading')
+      })
+    })
+  </script>
+
 </head>
 <body>
 <div class="navbar navbar-inverse navbar-fixed-top">
@@ -55,96 +70,113 @@ limitations under the License.
 </div>
 
 <div style="clear:both;margin-top:6%;"></div>
+
 <div class="container">
+
   <div class="row">
     <h1>Existing Counters</h1>
     {% if message %}
     <span class="label label-warning">Message: {{ message }}</span>
     {% endif %}
-    </div>
+  </div>
 
-      {% for timelineItem in timelineItems %}
-      <div class="row">
-	<form action="/" method="post">
-	  <input type="hidden" name="operation" value="updateCounter">
-	  <input type="hidden" name="itemId" value="{{ timelineItem.id }}">
-	  <div class="span6">
-	    <input type="text" name="name" value="{{ timelineItem.name }}">
-	  </div>
-	  <div class="span1">
-	    <input type="text" name="num" value="{{ timelineItem.num }}">
-	  </div>
-	  <div class="span1">
-	    <button class="btn btn-info" type="submit">
-	      Update
-	    </button>
-	  </div>
-	</form>
+  {% for timelineItem in timelineItems %}
+    <div class="row">
 
+      <form action="/" method="post">
+	<input type="hidden" name="operation" value="updateCounter">
+	<input type="hidden" name="itemId" value="{{ timelineItem.id }}">
+	<div class="span6">
+	  <input type="text" name="name" value="{{ timelineItem.name }}">
+	</div>
 	<div class="span1">
-    	<form action="/" method="post">
+	  <input type="text" name="num" value="{{ timelineItem.num }}">
+	</div>
+	<div class="span1">
+	  <button class="btn btn-info load" type="submit">
+	    Update
+	  </button>
+	</div>
+      </form>
+
+      <div class="span1">
+	<form action="/" method="post">
 	  <input type="hidden" name="operation" value="deleteCounter">
 	  <input type="hidden" name="itemId" value="{{ timelineItem.id }}">
-	  <button class="btn btn-danger" type="submit">
+	  <button class="btn btn-danger load" type="submit">
 	    Delete
 	  </button>
 	</form>
-	</div>
+      </div>
 
-	<div class="span1">
+      <div class="span1">
     	<form action="/" method="post">
 	  <input type="hidden" name="operation" value="resetCounter">
 	  <input type="hidden" name="itemId" value="{{ timelineItem.id }}">
-	  <button class="btn btn-warning" type="submit">
+	  <button class="btn btn-warning load" type="submit">
 	    Reset
 	  </button>
 	</form>
+      </div>
+
+    </div>
+  {% endfor %}
+
+  <div class="row">
+    <div class="span2" style="text-align:left">
+      <button type="button" class="btn btn-success" data-toggle="modal" data-target="#create">
+	+ New Counter
+      </button>
+    </div>
+  </div>
+
+  <div class="modal hide fade" id="create">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+      <h3>Create New Counter</h3>
+    </div>
+
+    <form action="/" method="post">
+      <div class="modal-body">
+	<input type="hidden" name="operation" value="newCounter">
+	<div class="span6">
+	  <input type="text" name="name" value="Number of Cats in my Schrodinger's Box">
+	</div>
+	<div class="span1">
+	  <input type="text" name="num" value="0">
 	</div>
       </div>
-      {% endfor %}
-
-      <div class="row">
-	<h2>Create New Counter</h2>
+      <div class="modal-footer">
+	<a href="#" data-dismiss="modal" aria-hidden="true" class="btn">Cancel</a>
+	<button data-loading-text="One Moment..." class="btn load btn-primary" type="submit">
+	  New Counter
+	</button>
       </div>
-
-      <div class="row">
-	<form action="/" method="post">
-	  <input type="hidden" name="operation" value="newCounter">
-	  <div class="span6">
-	    <input type="text" name="name" value="Number of Cats in my Schrodinger's Box">
-	  </div>
-	  <div class="span1"><input type="text" name="num" value="0"></div>
-	  <div class="span3">
-	    <button class="btn btn-success" style="width:100%" type="submit">
-	      New Counter
-	    </button>
-	  </div>
-	</form>
-      </div>
-
-</div>
+    </form>
   </div>
-    <div style="clear:both;"></div>
+</div>
+
+<div style="clear:both;"></div>
+
 <div class="container">
-<div class="row">
-<h2>Subscriptions</h2></div>
+  <div class="row">
+    <h2>Subscriptions</h2>
     <ul>
       {% for subscription in subscriptions %}
 	<li>
-	{{ subscription.callbackUrl }} 
-	({{ subscription.collection }})
+	   {{ subscription.callbackUrl }} 
+	   ({{ subscription.collection }})
 	</li>
-	{% endfor %}
-</ul>
-	<form action="/" method="post">
-	    <input type="hidden" name="operation" value="clearSubscriptions">
-	    <button class="btn" type="submit">
-	      Clear Subscriptions
-	    </button>
-	</form>
-	</div>
-<script
-    src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script src="/static/bootstrap/js/bootstrap.min.js"></script>
+      {% endfor %}
+    </ul>
+    <form action="/" method="post">
+      <input type="hidden" name="operation" value="clearSubscriptions">
+	<button class="btn" type="submit">
+	  Clear Subscriptions
+	</button>
+    </form>
+  </div>
+</div>
+
 </body>
 </html>
