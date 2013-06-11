@@ -129,15 +129,6 @@ class OAuthCodeExchangeHandler(OAuthBaseRequestHandler):
     else:
       logging.info('Post auth tasks are not supported on staging.')
 
-    # Insert welcome message.
-    timeline_item_body = {
-        'text': 'Welcome to the Python Quick Start',
-        'notification': {
-            'level': 'DEFAULT'
-        }
-    }
-    mirror_service.timeline().insert(body=timeline_item_body).execute()
-
 
 OAUTH_ROUTES = [
     ('/auth', OAuthCodeRequestHandler),

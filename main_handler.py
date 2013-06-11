@@ -22,6 +22,7 @@ import jinja2
 import logging
 import os
 import webapp2
+import json
 
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
@@ -35,6 +36,7 @@ from oauth2client.appengine import StorageByKeyName
 from model import Credentials
 import util
 
+from CustomCardFields import CustomCardFields 
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
@@ -76,10 +78,11 @@ class MainHandler(webapp2.RequestHandler):
     template_values['timelineItems'] = sorted(timeline_items.get('items', []))
 
     template_values['subscriptions'] = self.mirror_service.subscriptions().list().execute().get('items', []);
-    for item in template_values['timelineItems']:
-      if 'text' in item:
-	item['name'] = self._extract_name(item['text'])
-        item['num'] = self._extract_num(item['text'])
+    for i in range(len(template_values['timelineItems'])):
+      item = template_values['timelineItems'][i]
+      fields = CustomCardFields.getFieldsFromItem(item)
+      template_values['timelineItems'][i] = dict(fields.fields.items() + item.items())
+
     template = jinja_environment.get_template('templates/index.html')
     self.response.out.write(template.render(template_values))
 
@@ -111,15 +114,6 @@ class MainHandler(webapp2.RequestHandler):
     memcache.set(key=self.userid, value=message, time=5)
     self.redirect('/')
 
-  def _extract_num(self, text):
-    try:
-      return int(text[text.rfind(':')+2:])
-    except ValueError:
-      return 0;
-
-  def _extract_name(self, text):
-    return text[:text.rfind(':')]
-
   def _delete_counter(self):
     self.mirror_service.timeline().delete(id=self.request.get('itemId')).execute();
     return 'Counter Deleted';
@@ -134,7 +128,12 @@ class MainHandler(webapp2.RequestHandler):
 
   def _update_counter(self):
     item = self.mirror_service.timeline().get(id=self.request.get('itemId')).execute()
-    item['text'] = self.request.get('name') + ": " +  self.request.get('num');
+
+    fields = CustomCardFields({'name': self.request.get('name'), 'num': self.request.get('num')});
+    fields.updateItem(item)
+
+    logging.info(item);
+
     if 'notification' in item:
       item.pop('notification');
     self.mirror_service.timeline().update(id=self.request.get('itemId'), body=item).execute()
@@ -142,15 +141,10 @@ class MainHandler(webapp2.RequestHandler):
     
   def _reset_counter(self):
     item = self.mirror_service.timeline().get(id=self.request.get('itemId')).execute()
-    item['text'] = self._extract_name(item['text']) + ": 0";
-    if 'notification' in item:
-      item.pop('notification');
-    self.mirror_service.timeline().update(id=self.request.get('itemId'), body=item).execute()
-    return 'Counter Reset'
+    fields = CustomCardFields.getFieldsFromItem(item)
+    fields.set('num',  0);
+    fields.updateItem(item)
 
-  def _remove_counter(self):
-    item = self.mirror_service.timeline().get(id=self.request.get('itemId')).execute()
-    item['text'] = self._extract_name(item['text']) + ": 0";
     if 'notification' in item:
       item.pop('notification');
     self.mirror_service.timeline().update(id=self.request.get('itemId'), body=item).execute()
@@ -188,7 +182,8 @@ class MainHandler(webapp2.RequestHandler):
 	{'action': 'DELETE'}
       ]
     }
-    body['text'] = [self.request.get('name') + ": " + self.request.get('num')]
+    fields = CustomCardFields({'name': self.request.get('name'), 'num': self.request.get('num')});
+    body = fields.updateItem(body);
 
     # self.mirror_service is initialized in util.auth_required.
     self.mirror_service.timeline().insert(body=body).execute()

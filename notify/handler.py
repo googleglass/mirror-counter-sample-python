@@ -28,6 +28,7 @@ from oauth2client.appengine import StorageByKeyName
 from model import Credentials
 import util
 
+from CustomCardFields import CustomCardFields 
 
 class NotifyHandler(webapp2.RequestHandler):
   """Request Handler for notification pings."""
@@ -53,18 +54,24 @@ class NotifyHandler(webapp2.RequestHandler):
       if user_action.get('type') == 'CUSTOM' and user_action.get('payload') in operations:
         # Fetch the timeline item.
         item = self.mirror_service.timeline().get(id=data['itemId']).execute()
-	text = item['text']
-	name = text[0:(text.rfind(':')+2)]; # includes ": " end of text 
-	num = int(text[text.rfind(':')+2 : ])
+	logging.info(item);
+	fields = CustomCardFields.getFieldsFromItem(item)
+	
+	name = fields.get('name')
+	try:
+	  num = int(fields.get('num'));
+	except ValueError:
+	  num = 0;
 
-	logging.info(num)
-	logging.info(name)
 	if user_action.get('payload') == operations[0]:
-	  item['text'] = name + str(num + 1); 
+	  num += 1
 	elif user_action.get('payload') == operations[1]:
-	  item['text'] = name + str(num - 1); 
+	  num -= 1
 	elif user_action.get('payload') == operations[2]:
-	  item['text'] = name + "0"; 
+	  num = 0
+
+	fields.set('num', num);
+	fields.updateItem(item)
 
 	if 'notification' in item:
 	    item.pop('notification');
