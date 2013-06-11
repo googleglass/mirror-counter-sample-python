@@ -28,6 +28,7 @@ from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 
 import httplib2
+from apiclient.http import HttpError
 from apiclient import errors
 from apiclient.http import MediaIoBaseUpload
 from apiclient.http import BatchHttpRequest
@@ -203,7 +204,11 @@ class MainHandler(webapp2.RequestHandler):
 	  'callbackUrl': util.get_full_url(self, '/notify')
 	}
 	# self.mirror_service is initialized in util.auth_required.
-	self.mirror_service.subscriptions().insert(body=body).execute()
+
+	try:
+	    self.mirror_service.subscriptions().insert(body=body).execute()
+	except HttpError:
+	    return 'A new counter was created, but notifications were not enabled. HTTPS connection required.'
 
     return  'A new counter has been created.'
 

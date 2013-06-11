@@ -21,10 +21,10 @@ limitations under the License.
 
   <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet" media="screen">
   <style>
-    input{
+    input {
       width:100%;
     }
-    .row{
+    .row {
       margin-bottom:10px;
     }
     .span1, .span2,.span4,.span6,.span8 {
@@ -35,19 +35,19 @@ limitations under the License.
       display:inline;
     }
   </style>
-  <script type='text/javascript' src='http://code.jquery.com/jquery-1.7.1.js'></script>
+  <script type='text/javascript' src='/static/jquery/jquery-1.7.1.js'></script>
   <script type='text/javascript'>
     // bootstrap loads a different version of jQuery, so we need to create a seperate
     // namespace so that bootstrap does not conflict.
-    var jQ = jQuery.noConflict();
+    var myJquery = jQuery.noConflict();
   </script>
   <script type='text/javascript' src="/static/bootstrap/js/bootstrap.js"></script>
   <script type='text/javascript' src="/static/bootstrap/js/bootstrap-button.js"></script>
 
   <script type='text/javascript'>
-    jQ(window).load(function () {
-      jQ('.load').on('click', function () {
-	jQ(this).button('loading')
+    myJquery(window).load(function () {
+      myJquery('.load').on('click', function () {
+	myJquery(this).button('loading')
       })
     })
   </script>
