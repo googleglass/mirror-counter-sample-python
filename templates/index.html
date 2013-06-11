@@ -57,7 +57,7 @@ limitations under the License.
 <div class="navbar navbar-inverse navbar-fixed-top">
   <div class="navbar-inner">
     <div class="container">
-      <a class="brand" href="#">Counter for Glass</a>
+      <a class="brand" href="/">Counter for Glass</a>
 
       <div class="nav-collapse collapse">
         <form class="navbar-form pull-right" action="/signout" method="post">
@@ -152,28 +152,6 @@ limitations under the License.
 	  New Counter
 	</button>
       </div>
-    </form>
-  </div>
-</div>
-
-<div style="clear:both;"></div>
-
-<div class="container">
-  <div class="row">
-    <h2>Subscriptions</h2>
-    <ul>
-      {% for subscription in subscriptions %}
-	<li>
-	   {{ subscription.callbackUrl }} 
-	   ({{ subscription.collection }})
-	</li>
-      {% endfor %}
-    </ul>
-    <form action="/" method="post">
-      <input type="hidden" name="operation" value="clearSubscriptions">
-	<button class="btn" type="submit">
-	  Clear Subscriptions
-	</button>
     </form>
   </div>
 </div>

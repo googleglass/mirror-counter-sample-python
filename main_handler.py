@@ -105,7 +105,6 @@ class MainHandler(webapp2.RequestHandler):
         'deleteCounter': self._delete_counter,
         'resetCounter': self._reset_counter,
         'updateCounter': self._update_counter,
-        'clearSubscriptions': self._clear_subscriptions
     }
     if operation in operations:
       message = operations[operation]()
@@ -118,14 +117,6 @@ class MainHandler(webapp2.RequestHandler):
   def _delete_counter(self):
     self.mirror_service.timeline().delete(id=self.request.get('itemId')).execute();
     return 'Counter Deleted';
-
-  def _clear_subscriptions(self):
-    """Unsubscribe from notifications."""
-
-    subscriptions = self.mirror_service.subscriptions().list().execute()
-    for subscription in subscriptions.get('items', []):
-      self.mirror_service.subscriptions().delete(id=subscription.get('id')).execute()
-    return 'Application has been unsubscribed.'
 
   def _update_counter(self):
     item = self.mirror_service.timeline().get(id=self.request.get('itemId')).execute()
@@ -154,6 +145,7 @@ class MainHandler(webapp2.RequestHandler):
   def _new_counter(self):
     """Insert a timeline item."""
     logging.info('Inserting timeline item')
+    # Note that icons will not show up when making counters on a locally hosted web interface.
     body = {
       'notification': {'level': 'DEFAULT'},
       'menuItems': [
@@ -162,27 +154,28 @@ class MainHandler(webapp2.RequestHandler):
 	'id': 'increment',
 	'values': [{
 	    'displayName':"Increment",
-	    'iconUrl': '/static/images/up.png'}]
+	    'iconUrl': util.get_full_url(self, '/static/images/up.png')}]
 	},
 	{
         'action': 'CUSTOM',
 	'id': 'decrement',
 	'values': [{
 	    'displayName':"Decrement",
-	    'iconUrl': '/static/images/down.png'}]
+	    'iconUrl': util.get_full_url(self, '/static/images/down.png')}]
 	},
 	{
         'action': 'CUSTOM',
 	'id': 'reset',
 	'values': [{
 	    'displayName':"Reset",
-	    'iconUrl': '/static/images/reset.png'}]
+	    'iconUrl': util.get_full_url(self, '/static/images/reset.png')}]
 	},
 	{'action': 'SHARE'},
 	{'action': 'TOGGLE_PINNED'},
 	{'action': 'DELETE'}
       ]
     }
+    logging.info(body)
     fields = CustomCardFields({'name': self.request.get('name'), 'num': self.request.get('num')});
     body = fields.updateItem(body);
 

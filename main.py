@@ -28,11 +28,12 @@ from main_handler import MAIN_ROUTES
 from notify.handler import NOTIFY_ROUTES
 from oauth.handler import OAUTH_ROUTES
 from signout.handler import SIGNOUT_ROUTES
+from subscription.handler import SUBSCRIPTION_ROUTES
 
 
 ROUTES = (
     ATTACHMENT_PROXY_ROUTES + MAIN_ROUTES + NOTIFY_ROUTES + OAUTH_ROUTES +
-    SIGNOUT_ROUTES)
+    SIGNOUT_ROUTES + SUBSCRIPTION_ROUTES)
 
 
 app = webapp2.WSGIApplication(ROUTES)
