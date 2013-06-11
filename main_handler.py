@@ -162,21 +162,21 @@ class MainHandler(webapp2.RequestHandler):
 	'id': 'increment',
 	'values': [{
 	    'displayName':"Increment",
-	    'iconUrl': 'http://www.iaza.com/work/130421C/iaza14708834550500.gif'}]
+	    'iconUrl': '/static/images/up.png'}]
 	},
 	{
         'action': 'CUSTOM',
 	'id': 'decrement',
 	'values': [{
 	    'displayName':"Decrement",
-	    'iconUrl': 'http://www.iaza.com/work/130421C/iaza14708834550500.gif'}]
+	    'iconUrl': '/static/images/down.png'}]
 	},
 	{
         'action': 'CUSTOM',
 	'id': 'reset',
 	'values': [{
 	    'displayName':"Reset",
-	    'iconUrl': 'http://www.iaza.com/work/130421C/iaza14708834550500.gif'}]
+	    'iconUrl': '/static/images/reset.png'}]
 	},
 	{'action': 'SHARE'},
 	{'action': 'TOGGLE_PINNED'},
