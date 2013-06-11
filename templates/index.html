@@ -80,10 +80,10 @@ limitations under the License.
     {% endif %}
   </div>
 
+  <form action="/" method="post">
   {% for timelineItem in timelineItems %}
     <div class="row">
 
-      <form action="/" method="post">
 	<input type="hidden" name="operation" value="updateCounter">
 	<input type="hidden" name="itemId" value="{{ timelineItem.id }}">
 	<div class="span6">
@@ -116,8 +116,8 @@ limitations under the License.
 	  <button class="btn btn-warning load" type="submit">
 	    Reset
 	  </button>
-	</form>
       </div>
+    </form>
 
     </div>
   {% endfor %}
