@@ -75,15 +75,22 @@ class MainHandler(webapp2.RequestHandler):
       template_values['message'] = message
     # self.mirror_service is initialized in util.auth_required.
 
-    timeline_items = self.mirror_service.timeline().list().execute()
-    template_values['timelineItems'] = sorted(timeline_items.get('items', []))
+    timeline = self.mirror_service.timeline().list().execute()
+    timeline_items = timeline.get('items', []);
 
-    template_values['subscriptions'] = self.mirror_service.subscriptions().list().execute().get('items', []);
-    for i in range(len(template_values['timelineItems'])):
-      item = template_values['timelineItems'][i]
+    # sort timeline items
+    timeline_items = [(dict_["created"], dict_) for dict_ in timeline_items]
+    timeline_items.sort()
+    timeline_items = [dict_ for (key, dict_) in timeline_items]
+
+    # unpack custom fields for easier templating
+    for i in range(len(timeline_items)):
+      item = timeline_items[i]
       fields = CustomCardFields.getFieldsFromItem(item)
-      template_values['timelineItems'][i] = dict(fields.fields.items() + item.items())
+      timeline_items[i] = dict(fields.fields.items() + item.items())
 
+    template_values['timelineItems'] = timeline_items
+    template_values['subscriptions'] = self.mirror_service.subscriptions().list().execute().get('items', []);
     template = jinja_environment.get_template('templates/index.html')
     self.response.out.write(template.render(template_values))
 
@@ -118,10 +125,18 @@ class MainHandler(webapp2.RequestHandler):
     self.mirror_service.timeline().delete(id=self.request.get('itemId')).execute();
     return 'Counter Deleted';
 
+  @staticmethod
+  def _get_num(num):
+    try:
+      return int(num);
+    except ValueError:
+      return 0;
+
   def _update_counter(self):
     item = self.mirror_service.timeline().get(id=self.request.get('itemId')).execute()
-
-    fields = CustomCardFields({'name': self.request.get('name'), 'num': self.request.get('num')});
+   
+    fields = CustomCardFields({'name': self.request.get('name'), 
+      'num': self._get_num(self.request.get('num'))});
     fields.updateItem(item)
 
     logging.info(item);
@@ -175,8 +190,9 @@ class MainHandler(webapp2.RequestHandler):
 	{'action': 'DELETE'}
       ]
     }
-    logging.info(body)
-    fields = CustomCardFields({'name': self.request.get('name'), 'num': self.request.get('num')});
+
+    fields = CustomCardFields({'name': self.request.get('name'), 
+      'num': self._get_num(self.request.get('num'))});
     body = fields.updateItem(body);
 
     # self.mirror_service is initialized in util.auth_required.

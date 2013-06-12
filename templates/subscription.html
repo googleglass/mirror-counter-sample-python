@@ -1,0 +1,107 @@
+<!--
+Copyright (C) 2012 Google Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Counter for Glass</title>
+
+  <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet" media="screen">
+  <style>
+    input {
+      width:100%;
+    }
+    .row {
+      margin-bottom:10px;
+    }
+    .span1, .span2,.span4,.span6,.span8 {
+      margin-right:10px;
+      text-align:center;
+    }
+    form{
+      display:inline;
+    }
+  </style>
+  <script type='text/javascript' src='/static/jquery/jquery-1.7.1.js'></script>
+  <script type='text/javascript'>
+    // bootstrap loads a different version of jQuery, so we need to create a seperate
+    // namespace so that bootstrap does not conflict.
+    var myJquery = jQuery.noConflict();
+  </script>
+  <script type='text/javascript' src="/static/bootstrap/js/bootstrap.js"></script>
+  <script type='text/javascript' src="/static/bootstrap/js/bootstrap-button.js"></script>
+
+  <script type='text/javascript'>
+    myJquery(window).load(function () {
+      myJquery('.load').on('click', function () {
+	myJquery(this).button('loading')
+      })
+    })
+  </script>
+
+</head>
+<body>
+<div class="navbar navbar-inverse navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="/">Counter for Glass</a>
+
+      <div class="nav-collapse collapse">
+        <form class="navbar-form pull-right" action="/signout" method="post">
+          <button type="submit" class="btn">Sign out</button>
+        </form>
+      </div>
+      <!--/.nav-collapse -->
+    </div>
+  </div>
+</div>
+
+<div style="clear:both;margin-top:6%;"></div>
+
+<div class="container">
+
+  <div class="row">
+    <h2>Subscription Information</h2>
+    {% if message %}
+      <span class="label label-warning">Message: {{ message }}</span>
+    {% endif %}
+    <ul>
+      {% for subscription in subscriptions %}
+	<li>
+	   {{ subscription.callbackUrl }} 
+	   ({{ subscription.collection }})
+	</li>
+      {% endfor %}
+    </ul>
+    <h2>Subscription Options</h2>
+    <form action="/subscription" method="post">
+      <input type="hidden" name="operation" value="clearSubscriptions">
+	<button class="btn" type="submit">
+	  Clear Subscriptions
+	</button>
+    </form>
+    <br /><br />
+    <form action="/subscription" method="post">
+      <input type="hidden" name="operation" value="makeSubscription">
+	<button class="btn" type="submit">
+	  Subscribe to timeline with callback url: {{ subscriptionUrl }}
+	</button>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>

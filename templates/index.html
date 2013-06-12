@@ -27,8 +27,8 @@ limitations under the License.
     .row {
       margin-bottom:10px;
     }
-    .span1, .span2,.span4,.span6,.span8 {
-      margin-right:10px;
+    .span1, .span2, .span3, .span4, .span5, .span6, .span7, .span8 {
+      padding-right:10px;
       text-align:center;
     }
     form{
@@ -74,19 +74,29 @@ limitations under the License.
 <div class="container">
 
   <div class="row">
-    <h1>Existing Counters</h1>
+    <h1>Counters</h1>
     {% if message %}
     <span class="label label-warning">Message: {{ message }}</span>
     {% endif %}
   </div>
 
-  <form action="/" method="post">
   {% for timelineItem in timelineItems %}
     <div class="row">
 
+      {% if loop.first %}
+      <table>
+	<tr>
+	<th class="span7">Counter Name</th>
+	<th class="span2">Count</th>
+	<th class="span3"> </th>
+	</tr>
+      </table>
+      {% endif %}
+
+      <form action="/" method="post">
 	<input type="hidden" name="operation" value="updateCounter">
 	<input type="hidden" name="itemId" value="{{ timelineItem.id }}">
-	<div class="span6">
+	<div class="span7">
 	  <input type="text" name="name" value="{{ timelineItem.name }}">
 	</div>
 	<div class="span1">
@@ -94,7 +104,7 @@ limitations under the License.
 	</div>
 	<div class="span1">
 	  <button class="btn btn-info load" type="submit">
-	    Update
+	    Rename
 	  </button>
 	</div>
       </form>
@@ -140,10 +150,10 @@ limitations under the License.
       <div class="modal-body">
 	<input type="hidden" name="operation" value="newCounter">
 	<div class="span6">
-	  <input type="text" name="name" value="Number of Cats in my Schrodinger's Box">
+	  <input type="text" name="name" placeholder="Counter Name">
 	</div>
-	<div class="span1">
-	  <input type="text" name="num" value="0">
+	<div class="span2">
+	  <input type="text" name="num" placeholder="Starting Count (0)">
 	</div>
       </div>
       <div class="modal-footer">
