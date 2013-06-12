@@ -16,27 +16,14 @@
 
 __author__ = 'alainv@google.com (Alain Vongsouvanh)'
 
-
-import io
 import jinja2
 import logging
 import os
 import webapp2
-import json
-
-from google.appengine.api import memcache
-from google.appengine.api import urlfetch
-
-import httplib2
-from apiclient.http import HttpError
-from apiclient import errors
-from apiclient.http import MediaIoBaseUpload
-from apiclient.http import BatchHttpRequest
-from oauth2client.appengine import StorageByKeyName
-
-from model import Credentials
 import util
 
+from google.appengine.api import memcache
+from apiclient.http import HttpError
 from CustomCardFields import CustomCardFields 
 
 jinja_environment = jinja2.Environment(
@@ -76,7 +63,7 @@ class MainHandler(webapp2.RequestHandler):
     # self.mirror_service is initialized in util.auth_required.
 
     timeline = self.mirror_service.timeline().list().execute()
-    timeline_items = timeline.get('items', []);
+    timeline_items = timeline.get('items', [])
 
     # sort timeline items
     timeline_items = [(dict_["created"], dict_) for dict_ in timeline_items]
@@ -90,7 +77,7 @@ class MainHandler(webapp2.RequestHandler):
       timeline_items[i] = dict(fields.fields.items() + item.items())
 
     template_values['timelineItems'] = timeline_items
-    template_values['subscriptions'] = self.mirror_service.subscriptions().list().execute().get('items', []);
+    template_values['subscriptions'] = self.mirror_service.subscriptions().list().execute().get('items', [])
     template = jinja_environment.get_template('templates/index.html')
     self.response.out.write(template.render(template_values))
 
@@ -122,38 +109,40 @@ class MainHandler(webapp2.RequestHandler):
     self.redirect('/')
 
   def _delete_counter(self):
-    self.mirror_service.timeline().delete(id=self.request.get('itemId')).execute();
-    return 'Counter Deleted';
+    """Deletes the user-inputted timeline card."""
+    self.mirror_service.timeline().delete(id=self.request.get('itemId')).execute()
+    return 'Counter Deleted'
 
   @staticmethod
   def _get_num(num):
+    """ Parses num into int. Returns 0 if num is invalid """
     try:
-      return int(num);
+      return int(num)
     except ValueError:
-      return 0;
+      return 0
 
   def _update_counter(self):
+    """Updates the counter to user input for given timeline card."""
     item = self.mirror_service.timeline().get(id=self.request.get('itemId')).execute()
    
     fields = CustomCardFields({'name': self.request.get('name'), 
-      'num': self._get_num(self.request.get('num'))});
+      'num': self._get_num(self.request.get('num'))})
     fields.updateItem(item)
 
-    logging.info(item);
-
     if 'notification' in item:
-      item.pop('notification');
+      item.pop('notification')
     self.mirror_service.timeline().update(id=self.request.get('itemId'), body=item).execute()
     return 'Counter Updated'
     
   def _reset_counter(self):
+    """Resets the counter for given timeline card."""
     item = self.mirror_service.timeline().get(id=self.request.get('itemId')).execute()
     fields = CustomCardFields.getFieldsFromItem(item)
-    fields.set('num',  0);
+    fields.set('num',  0)
     fields.updateItem(item)
 
     if 'notification' in item:
-      item.pop('notification');
+      item.pop('notification')
     self.mirror_service.timeline().update(id=self.request.get('itemId'), body=item).execute()
     return 'Counter Reset'
 
@@ -192,32 +181,31 @@ class MainHandler(webapp2.RequestHandler):
     }
 
     fields = CustomCardFields({'name': self.request.get('name'), 
-      'num': self._get_num(self.request.get('num'))});
-    body = fields.updateItem(body);
+      'num': self._get_num(self.request.get('num'))})
+    body = fields.updateItem(body)
 
     # self.mirror_service is initialized in util.auth_required.
     self.mirror_service.timeline().insert(body=body).execute()
 
-    """Subscribe the app."""
+    # Subscribe to glassware
     subscriptions = self.mirror_service.subscriptions().list().execute()
-    needSubscribe = True;
+    need_subscribe = True
     for subscription in subscriptions.get('items', []):
-    	if subscription.get('collection') == 'timeline':
-    	    needSubscribe = False;
+      if subscription.get('collection') == 'timeline':
+	need_subscribe = False
 
-    if needSubscribe:
-	logging.info('Subscribing to Timeline')
-	# self.userid is initialized in util.auth_required.
-	body = {'collection': 'timeline',
-	  'userToken': self.userid,
-	  'callbackUrl': util.get_full_url(self, '/notify')
-	}
-	# self.mirror_service is initialized in util.auth_required.
-
-	try:
-	    self.mirror_service.subscriptions().insert(body=body).execute()
-	except HttpError:
-	    return 'A new counter was created, but notifications were not enabled. HTTPS connection required.'
+    if need_subscribe:
+      logging.info('Subscribing to Timeline')
+      # self.userid is initialized in util.auth_required.
+      body = {'collection': 'timeline',
+	'userToken': self.userid,
+	'callbackUrl': util.get_full_url(self, '/notify')
+      }
+      # self.mirror_service is initialized in util.auth_required.
+      try:
+	self.mirror_service.subscriptions().insert(body=body).execute()
+      except HttpError:
+	return 'A new counter was created, but notifications were not enabled. HTTPS connection required.'
 
     return  'A new counter has been created.'
 
