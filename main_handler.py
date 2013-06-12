@@ -98,7 +98,7 @@ class MainHandler(webapp2.RequestHandler):
             'newCounter': self._new_counter,
             'deleteCounter': self._delete_counter,
             'resetCounter': self._reset_counter,
-            'updateCounter': self._update_counter,
+            'updateCounter': self._update_counter
         }
         if operation in operations:
             message = operations[operation]()
