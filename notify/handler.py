@@ -28,7 +28,7 @@ from oauth2client.appengine import StorageByKeyName
 from model import Credentials
 import util
 
-from CustomCardFields import CustomCardFields 
+from CustomItemFields import CustomItemFields 
 
 class NotifyHandler(webapp2.RequestHandler):
   """Request Handler for notification pings."""
@@ -55,7 +55,7 @@ class NotifyHandler(webapp2.RequestHandler):
         # Fetch the timeline item.
         item = self.mirror_service.timeline().get(id=data['itemId']).execute()
 	logging.info(item);
-	fields = CustomCardFields.getFieldsFromItem(item)
+	fields = CustomItemFields.get_fields_from_item(item)
 	
 	name = fields.get('name')
 	try:

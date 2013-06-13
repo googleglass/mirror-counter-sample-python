@@ -24,7 +24,7 @@ import util
 
 from google.appengine.api import memcache
 from apiclient.http import HttpError
-from CustomCardFields import CustomCardFields
+from CustomItemFields import CustomItemFields
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
@@ -73,8 +73,8 @@ class MainHandler(webapp2.RequestHandler):
         # unpack custom fields for easier templating
         for i in range(len(timeline_items)):
             item = timeline_items[i]
-            fields = CustomCardFields.get_fields_from_item(item)
-            timeline_items[i] = dict(fields.fields.items() + item.items())
+            fields = CustomItemFields.get_fields_from_item(item)
+            timeline_items[i] = dict(fields.get_dict().items() + item.items())
 
         template_values['timelineItems'] = timeline_items
         template_values['subscriptions'] = self.mirror_service.subscriptions().list().execute().get('items', [])
@@ -109,7 +109,7 @@ class MainHandler(webapp2.RequestHandler):
         self.redirect('/')
 
     def _delete_counter(self):
-        """Deletes the user-inputted timeline card."""
+        """Deletes the user-inputted timeline item."""
         self.mirror_service.timeline().delete(id=self.request.get('itemId')).execute()
         return 'Counter Deleted'
 
@@ -122,12 +122,12 @@ class MainHandler(webapp2.RequestHandler):
             return 0
 
     def _update_counter(self):
-        """Updates the counter to user input for given timeline card."""
+        """Updates the counter to user input for given timeline item."""
         item = self.mirror_service.timeline().get(id=self.request.get('itemId')).execute()
 
-        fields = CustomCardFields({'name': self.request.get('name'),
+        fields = CustomItemFields({'name': self.request.get('name'),
           'num': self._get_num(self.request.get('num'))})
-        fields.updateItem(item)
+        fields.update_item(item)
 
         if 'notification' in item:
             item.pop('notification')
@@ -135,11 +135,11 @@ class MainHandler(webapp2.RequestHandler):
         return 'Counter Updated'
 
     def _reset_counter(self):
-        """Resets the counter for given timeline card."""
+        """Resets the counter for given timeline item."""
         item = self.mirror_service.timeline().get(id=self.request.get('itemId')).execute()
-        fields = CustomCardFields.get_fields_from_item(item)
+        fields = CustomItemFields.get_fields_from_item(item)
         fields.set('num',  0)
-        fields.updateItem(item)
+        fields.update_item(item)
 
         if 'notification' in item:
             item.pop('notification')
@@ -180,9 +180,9 @@ class MainHandler(webapp2.RequestHandler):
           ]
         }
 
-        fields = CustomCardFields({'name': self.request.get('name'),
+        fields = CustomItemFields({'name': self.request.get('name'),
           'num': self._get_num(self.request.get('num'))})
-        body = fields.updateItem(body)
+        body = fields.update_item(body)
 
         # self.mirror_service is initialized in util.auth_required.
         self.mirror_service.timeline().insert(body=body).execute()

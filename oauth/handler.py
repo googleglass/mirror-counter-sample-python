@@ -30,7 +30,6 @@ import util
 
 
 SCOPES = ('https://www.googleapis.com/auth/glass.timeline '
-          'https://www.googleapis.com/auth/glass.location '
           'https://www.googleapis.com/auth/userinfo.profile')
 
 
@@ -118,14 +117,6 @@ class OAuthCodeExchangeHandler(OAuthBaseRequestHandler):
           'callbackUrl': util.get_full_url(self, '/notify')
       }
       mirror_service.subscriptions().insert(body=subscription_body).execute()
-
-      # Insert a sharing contact.
-      contact_body = {
-          'id': 'Python Quick Start',
-          'displayName': 'Python Quick Start',
-          'imageUrls': [util.get_full_url(self, '/static/images/python.png')]
-      }
-      mirror_service.contacts().insert(body=contact_body).execute()
     else:
       logging.info('Post auth tasks are not supported on staging.')
 
