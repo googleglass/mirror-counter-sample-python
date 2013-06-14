@@ -97,10 +97,10 @@ limitations under the License.
 	<input type="hidden" name="operation" value="updateCounter">
 	<input type="hidden" name="itemId" value="{{ timelineItem.id }}">
 	<div class="span7">
-	  <input type="text" name="name" value="{{ timelineItem.name }}">
+	  <input type="text" name="name" value="{{ timelineItem.sourceItemId.name }}">
 	</div>
 	<div class="span1">
-	  <input type="text" name="num" value="{{ timelineItem.num }}">
+	  <input type="text" name="num" value="{{ timelineItem.sourceItemId.num }}">
 	</div>
 	<div class="span1">
 	  <button class="btn btn-info load" type="submit">

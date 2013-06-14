@@ -14,7 +14,7 @@
 
 """Request Handler for /main endpoint."""
 
-__author__ = 'alainv@google.com (Alain Vongsouvanh)'
+__author__ = 'jenniferwang@google.com (Jennifer Wang)'
 
 import logging
 import os
@@ -31,6 +31,7 @@ from google.appengine.api import memcache
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
+TIMELINE_ITEM_TEMPLATE_URL = '/templates/card.html'
 
 class _BatchCallback(object):
   """Class used to track batch request responses."""
@@ -76,11 +77,9 @@ class MainHandler(webapp2.RequestHandler):
     for i in range(len(timeline_items)):
       item = timeline_items[i]
       fields = CustomItemFields.get_fields_from_item(item)
-      timeline_items[i] = dict(fields.get_dict().items() + item.items())
+      timeline_items[i]['sourceItemId'] = fields
 
     template_values['timelineItems'] = timeline_items
-    template_values['subscriptions'] = self.mirror_service.subscriptions(
-        ).list().execute().get('items', [])
     template = jinja_environment.get_template('templates/index.html')
     self.response.out.write(template.render(template_values))
 
@@ -112,7 +111,7 @@ class MainHandler(webapp2.RequestHandler):
     self.redirect('/')
 
   def _delete_counter(self):
-    """Deletes the user-inputted timeline item."""
+    """Deletes the user-specified timeline item."""
     self.mirror_service.timeline().delete(
         id=self.request.get('itemId')).execute()
     return 'Counter Deleted'
@@ -130,11 +129,12 @@ class MainHandler(webapp2.RequestHandler):
     item = self.mirror_service.timeline(
         ).get(id=self.request.get('itemId')).execute()
 
-    fields = CustomItemFields({
+    new_fields = {
         'name': self.request.get('name'),
         'num': self._get_num(self.request.get('num'))
-        })
-    fields.update_item(item)
+        }
+    CustomItemFields.set_multiple_custom(item, new_fields, 
+        TIMELINE_ITEM_TEMPLATE_URL);
 
     if 'notification' in item:
       item.pop('notification')
@@ -147,9 +147,8 @@ class MainHandler(webapp2.RequestHandler):
     item = self.mirror_service.timeline().get(
         id=self.request.get('itemId')).execute()
 
-    fields = CustomItemFields.get_fields_from_item(item)
-    fields.set('num', 0)
-    fields.update_item(item)
+    item = CustomItemFields.set_custom(item, 'num', 0, 
+        TIMELINE_ITEM_TEMPLATE_URL)
 
     if 'notification' in item:
       item.pop('notification')
@@ -194,17 +193,17 @@ class MainHandler(webapp2.RequestHandler):
             {'action': 'DELETE'}
         ]
     }
-
-    fields = CustomItemFields({
+    new_fields = {
         'name': self.request.get('name'),
         'num': self._get_num(self.request.get('num'))
-        })
-    body = fields.update_item(body)
+        }
+    CustomItemFields.set_multiple_custom(item, new_fields, 
+        TIMELINE_ITEM_TEMPLATE_URL);
 
     # self.mirror_service is initialized in util.auth_required.
     self.mirror_service.timeline().insert(body=body).execute()
 
-    # Subscribe to glassware
+    # Subscribe to timeline notifications if needed
     subscriptions = self.mirror_service.subscriptions().list().execute()
     need_subscribe = True
     for subscription in subscriptions.get('items', []):
