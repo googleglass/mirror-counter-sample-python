@@ -16,19 +16,14 @@
 
 __author__ = 'alainv@google.com (Alain Vongsouvanh)'
 
-
-import io
 import json
 import logging
-import webapp2
 
-from apiclient.http import MediaIoBaseUpload
-from oauth2client.appengine import StorageByKeyName
-
+from CustomItemFields import CustomItemFields
 from model import Credentials
+from oauth2client.appengine import StorageByKeyName
 import util
-
-from CustomItemFields import CustomItemFields 
+import webapp2
 
 class NotifyHandler(webapp2.RequestHandler):
   """Request Handler for notification pings."""
@@ -54,7 +49,6 @@ class NotifyHandler(webapp2.RequestHandler):
       if user_action.get('type') == 'CUSTOM' and user_action.get('payload') in operations:
         # Fetch the timeline item.
         item = self.mirror_service.timeline().get(id=data['itemId']).execute()
-	logging.info(item);
 	fields = CustomItemFields.get_fields_from_item(item)
 	
 	name = fields.get('name')
@@ -71,10 +65,12 @@ class NotifyHandler(webapp2.RequestHandler):
 	  num = 0
 
 	fields.set('num', num);
-	fields.updateItem(item)
+	fields.update_item(item)
 
 	if 'notification' in item:
 	    item.pop('notification');
+	
+	logging.info(item)
 	self.mirror_service.timeline().update(id=data['itemId'], body=item).execute()
 	# Only handle the first successful action.
         break
