@@ -33,6 +33,7 @@ jinja_environment = jinja2.Environment(
 
 TIMELINE_ITEM_TEMPLATE_URL = '/templates/card.html'
 
+
 class _BatchCallback(object):
   """Class used to track batch request responses."""
 
@@ -133,8 +134,8 @@ class MainHandler(webapp2.RequestHandler):
         'name': self.request.get('name'),
         'num': self._get_num(self.request.get('num'))
         }
-    CustomItemFields.set_multiple_custom(item, new_fields, 
-        TIMELINE_ITEM_TEMPLATE_URL);
+    CustomItemFields.set_multiple(
+        item, new_fields, TIMELINE_ITEM_TEMPLATE_URL)
 
     if 'notification' in item:
       item.pop('notification')
@@ -147,8 +148,8 @@ class MainHandler(webapp2.RequestHandler):
     item = self.mirror_service.timeline().get(
         id=self.request.get('itemId')).execute()
 
-    item = CustomItemFields.set_custom(item, 'num', 0, 
-        TIMELINE_ITEM_TEMPLATE_URL)
+    item = CustomItemFields.set(
+        item, 'num', 0, TIMELINE_ITEM_TEMPLATE_URL)
 
     if 'notification' in item:
       item.pop('notification')
@@ -197,8 +198,8 @@ class MainHandler(webapp2.RequestHandler):
         'name': self.request.get('name'),
         'num': self._get_num(self.request.get('num'))
         }
-    CustomItemFields.set_multiple_custom(item, new_fields, 
-        TIMELINE_ITEM_TEMPLATE_URL);
+    CustomItemFields.set_multiple(
+        body, new_fields, TIMELINE_ITEM_TEMPLATE_URL)
 
     # self.mirror_service is initialized in util.auth_required.
     self.mirror_service.timeline().insert(body=body).execute()

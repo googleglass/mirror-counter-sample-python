@@ -27,15 +27,16 @@ jinja_environment = jinja2.Environment(
 
 class CustomItemFields(object):
   """
-  CustomItemFields uses the sourceItemId field of a timeline item to enable
-  custom fields (i.e. variables) for the timeline item. Each custom field is a key->value pair
-  encapsulated in a dictionary self._fields. The dictionary is JSON serialized and stored in 
-  the sourceItemId field of a timeline item. 
-  
-  Additionally, a possible use of a CustomitemFields is to use the custom fields to render the
-  HTML of a timeline item. This class takes care of this by using jinja templates.
-  """
+  CustomItemFields uses the sourceItemId field of a timeline
+  item to enable custom fields (i.e. variables) for the timeline
+  item. Each custom field is a key->value pair encapsulated in a
+  dictionary (usually called fields). The dictionary is JSON
+  serialized and stored in the sourceItemId field of a timeline item.
 
+  Additionally, a possible use of a CustomitemFields is to use the
+  custom fields to render the HTML of a timeline item. This class
+  takes care of this by using jinja templates.
+  """
   @classmethod
   def get_fields_from_json(cls, json_input):
     """Returns a dictionary from json_input."""
@@ -61,37 +62,35 @@ class CustomItemFields(object):
   @classmethod
   def render_html_from_fields(cls, fields, template_url):
     """Returns html rendering of timeline item with custom fields data."""
-    template = jinja_environment.geyyt_template(template_url)
-    return template.render(self._fields)
+    template = jinja_environment.get_template(template_url)
+    return template.render(fields)
 
   @classmethod
   def get(cls, item, key):
     """Returns value associated with in input key."""
     fields = cls.get_fields_from_item(item)
-    return fields[key] 
+    return fields[key]
 
   @classmethod
-  def set(cls, item, key, val, template_url = ''):
-    return cls.set_multiple(item, {key:val}, template_url);
+  def set(cls, item, key, val, template_url=''):
+    return cls.set_multiple(item, {key: val}, template_url)
 
   @classmethod
-  def set_multiple(cls, item, new_fields, template_url = ''):
+  def set_multiple(cls, item, new_fields, template_url=''):
     """
-    Sets key->value field in timeline item. 
-    To do this, this method updates a timeline item's sourceItemId 
+    Sets key->value field in timeline item.
+    To do this, this method updates a timeline item's sourceItemId
     and, if enabled, template html.
 
     Generating JSON and rendering html with each call could cause
     performance issues on larger scale Glassware.
     """
-    current_fields = cls.get_fields_from_item(item)
+    fields = cls.get_fields_from_item(item)
+    fields.update(new_fields)
 
-    for key in new_fields.keys():
-      current_fields[key] = new_fields(key)
-
-    item['sourceItemId'] = cls.get_json(fields)
-    if template_url != '':
-      template = jinja_environment.geyyt_template(template_url)
-      item['html'] = self.render_html()
+    item['sourceItemId'] = cls.get_json_from_fields(fields)
+    if template_url:
+      item['html'] = cls.render_html_from_fields(
+          fields, template_url)
 
     return item
