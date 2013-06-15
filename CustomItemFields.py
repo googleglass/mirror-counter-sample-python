@@ -27,7 +27,7 @@ jinja_environment = jinja2.Environment(
 
 class CustomItemFields(object):
   """
-  CustomItemFields uses the sourceItemId field of a timeline
+  CustomItemFields uses timelineItem.sourceItemId of a timeline
   item to enable custom fields (i.e. variables) for the timeline
   item. Each custom field is a key->value pair encapsulated in a
   dictionary (usually called fields). The dictionary is JSON
