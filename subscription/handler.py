@@ -14,7 +14,7 @@
 
 """Request Handler for /notify endpoint."""
 
-__author__ = 'alainv@google.com (Alain Vongsouvanh)'
+__author__ = 'jenniferwang@google.com (Jennifer Wang)'
 
 
 import util
