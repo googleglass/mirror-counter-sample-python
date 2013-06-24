@@ -14,12 +14,12 @@
 
 """Request Handler for /notify endpoint."""
 
-__author__ = 'jenniferwang@google.com (Jennifer Wang)'
+__author__ = 'jewang.net (Jennifer Wang)'
 
 import json
 import logging
 
-from CustomItemFields import CustomItemFields
+import CustomItemFields
 from main_handler import TIMELINE_ITEM_TEMPLATE_URL
 from model import Credentials
 from oauth2client.appengine import StorageByKeyName

@@ -97,8 +97,7 @@ class OAuthCodeExchangeHandler(OAuthBaseRequestHandler):
   def _perform_post_auth_tasks(self, userid, creds):
     """Perform commong post authorization tasks.
 
-    Subscribes the service to notifications for the user and add one sharing
-    contact.
+    Subscribes the service to notifications for the user.
 
     Args:
       userid: ID of the current user.

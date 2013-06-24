@@ -14,7 +14,7 @@
 
 """Request Handler for /main endpoint."""
 
-__author__ = 'jenniferwang@google.com (Jennifer Wang)'
+__author__ = 'jewang.net (Jennifer Wang)'
 
 import logging
 import os
@@ -23,10 +23,11 @@ from apiclient.http import HttpError
 import jinja2
 import webapp2
 
-from CustomItemFields import CustomItemFields
+import CustomItemFields
 import util
 
 from google.appengine.api import memcache
+
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
@@ -70,15 +71,12 @@ class MainHandler(webapp2.RequestHandler):
     timeline_items = timeline.get('items', [])
 
     # sort timeline items
-    timeline_items = [(dict_['created'], dict_) for dict_ in timeline_items]
-    timeline_items.sort()
-    timeline_items = [dict_ for (key, dict_) in timeline_items]
+    timeline_items = timeline_items.sort(key=lambda x: x['created'])
 
-    # unpack custom fields for easier templating
-    for i in range(len(timeline_items)):
-      item = timeline_items[i]
-      fields = CustomItemFields.get_fields_from_item(item)
-      timeline_items[i]['sourceItemId'] = fields
+    # turn sourceItemId JSON string into a dictionary for templating
+    for item in timeline_items:
+      fields = CustomCardFields.get_fields_from_item(item)
+      item['sourceItemId'] = fields
 
     template_values['timelineItems'] = timeline_items
     template = jinja_environment.get_template('templates/index.html')
