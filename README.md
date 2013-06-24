@@ -1,7 +1,7 @@
 Counter for Glass
 ========================
 
-Sample counter Glassware for Google Glass written in Python.
+Sample counter Glassware written in Python.
 
 To create a counter, a user accesses a web UI hosted on Google App Engine
 and sets a name and starting number. Counters appear on Glass devices as 

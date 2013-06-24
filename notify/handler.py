@@ -16,15 +16,24 @@
 
 __author__ = 'jewang.net (Jennifer Wang)'
 
+
 import json
 import logging
-
-import CustomItemFields
-from main_handler import TIMELINE_ITEM_TEMPLATE_URL
-from model import Credentials
-from oauth2client.appengine import StorageByKeyName
-import util
 import webapp2
+
+from oauth2client.appengine import StorageByKeyName
+
+from model import Credentials
+import custom_item_fields
+from main_handler import TIMELINE_ITEM_TEMPLATE_URL
+import util
+
+
+PROCESS_OPTIONS = {
+        'increment': lambda num: num + 1,
+        'decrement': lambda num: num - 1,
+        'reset': lambda num: 0
+    }
 
 
 class NotifyHandler(webapp2.RequestHandler):
@@ -44,69 +53,31 @@ class NotifyHandler(webapp2.RequestHandler):
 
   def _handle_timeline_notification(self, data):
     """Handle timeline notification."""
-
-    options = {
-        'increment': self._increment,
-        'decrement': self._decrement,
-        'reset': self._reset
-    }
+ 
     for user_action in data.get('userActions', []):
       logging.info(user_action)
       option = user_action.get('payload')
-      if (user_action.get('type') == 'CUSTOM' and
-          option in options):
-
-        options[option]()
+      if user_action.get('type') == 'CUSTOM' and option in PROCESS_OPTIONS:
+        data = json.loads(self.request.body)
+        item = self.mirror_service.timeline().get(id=data['itemId']).execute()
+        try:
+          num = int(custom_item_fields.get(item, 'num'))
+        except ValueError:
+          # if an invalid int is this field, just use 0 instead
+          num = 0
+        # possible actions are functions listed in PROCESS_OPTIONS
+        custom_item_fields.set(
+            item, 'num', PROCESS_OPTIONS[option](num), TIMELINE_ITEM_TEMPLATE_URL)
+      if 'notification' in item:
+        item.pop('notification')
+        self.mirror_service.timeline().update(
+            id=data['itemId'], body=item).execute()
 	# Only handle the first successful action.
         break
-
       else:
         logging.info(
             "I don't know what to do with this notification: %s", user_action)
 
-  def _increment(self):
-    """Increments the counter for given timeline item."""
-    data = json.loads(self.request.body)
-    item = self.mirror_service.timeline().get(id=data['itemId']).execute()
-    try:
-      num = int(CustomItemFields.get(item, 'num'))
-    except ValueError:
-      # if an invalid int is this field, just use 0 instead
-      num = 0
-
-    CustomItemFields.set(item, 'num', num + 1, TIMELINE_ITEM_TEMPLATE_URL)
-    if 'notification' in item:
-      item.pop('notification')
-    self.mirror_service.timeline().update(
-        id=data['itemId'], body=item).execute()
-
-  def _decrement(self):
-    """Decrements the counter for given timeline item."""
-    data = json.loads(self.request.body)
-    item = self.mirror_service.timeline().get(id=data['itemId']).execute()
-    try:
-      num = int(CustomItemFields.get(item, 'num'))
-    except ValueError:
-      # if an invalid int is this field, just use 0 instead
-      num = 0
-
-    CustomItemFields.set(item, 'num', num - 1, TIMELINE_ITEM_TEMPLATE_URL)
-    if 'notification' in item:
-      item.pop('notification')
-    self.mirror_service.timeline().update(
-        id=data['itemId'], body=item).execute()
-
-  def _reset(self):
-    """Resets the counter for given timeline item."""
-    # could not simply call main_handler._reset_counter() because it is a
-    # private method
-    data = json.loads(self.request.body)
-    item = self.mirror_service.timeline().get(id=data['itemId']).execute()
-    CustomItemFields.set(item, 'num', 0, TIMELINE_ITEM_TEMPLATE_URL)
-    if 'notification' in item:
-      item.pop('notification')
-    self.mirror_service.timeline().update(
-        id=data['itemId'], body=item).execute()
 
 NOTIFY_ROUTES = [
     ('/notify', NotifyHandler)

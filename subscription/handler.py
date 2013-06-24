@@ -20,11 +20,12 @@ __author__ = 'jenniferwang@google.com (Jennifer Wang)'
 import jinja2
 import logging
 import os
-import util
 import webapp2
 
 from apiclient.http import HttpError
 from google.appengine.api import memcache
+
+import util
 
 
 jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(

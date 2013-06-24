@@ -16,21 +16,22 @@
 
 __author__ = 'jewang.net (Jennifer Wang)'
 
+
+import jinja2
 import logging
 import os
-
-from apiclient.http import HttpError
-import jinja2
 import webapp2
 
-import CustomItemFields
-import util
-
+from apiclient.http import HttpError
 from google.appengine.api import memcache
+
+import custom_item_fields
+import util
 
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
+
 
 TIMELINE_ITEM_TEMPLATE_URL = '/templates/card.html'
 
@@ -66,16 +67,15 @@ class MainHandler(webapp2.RequestHandler):
     if message:
       template_values['message'] = message
     # self.mirror_service is initialized in util.auth_required.
-
     timeline = self.mirror_service.timeline().list().execute()
     timeline_items = timeline.get('items', [])
 
     # sort timeline items
-    timeline_items = timeline_items.sort(key=lambda x: x['created'])
+    timeline_items = sorted(timeline_items, key=lambda x: x['created'])
 
     # turn sourceItemId JSON string into a dictionary for templating
     for item in timeline_items:
-      fields = CustomCardFields.get_fields_from_item(item)
+      fields = custom_item_fields.get_fields_from_item(item)
       item['sourceItemId'] = fields
 
     template_values['timelineItems'] = timeline_items
@@ -125,14 +125,14 @@ class MainHandler(webapp2.RequestHandler):
 
   def _update_counter(self):
     """Updates the counter to user input for given timeline item."""
-    item = self.mirror_service.timeline(
-        ).get(id=self.request.get('itemId')).execute()
+    item = self.mirror_service.timeline().get(
+        id=self.request.get('itemId')).execute()
 
     new_fields = {
         'name': self.request.get('name'),
         'num': self._get_num(self.request.get('num'))
-        }
-    CustomItemFields.set_multiple(
+    }
+    custom_item_fields.set_multiple(
         item, new_fields, TIMELINE_ITEM_TEMPLATE_URL)
 
     if 'notification' in item:
@@ -146,7 +146,7 @@ class MainHandler(webapp2.RequestHandler):
     item = self.mirror_service.timeline().get(
         id=self.request.get('itemId')).execute()
 
-    item = CustomItemFields.set(
+    item = custom_item_fields.set(
         item, 'num', 0, TIMELINE_ITEM_TEMPLATE_URL)
 
     if 'notification' in item:
@@ -154,6 +154,25 @@ class MainHandler(webapp2.RequestHandler):
     self.mirror_service.timeline().update(
         id=self.request.get('itemId'), body=item).execute()
     return 'Counter Reset'
+
+  def _subscribe(self):
+    """Subscribe to timeline notifications if not yet subscribed."""
+    subscriptions = self.mirror_service.subscriptions().list().execute()
+    need_subscribe = True
+    for subscription in subscriptions.get('items', []):
+      if subscription.get('collection') == 'timeline':
+        need_subscribe = False
+
+    if need_subscribe:
+      logging.info('Subscribing to Timeline')
+      # self.userid is initialized in util.auth_required.
+      body = {
+          'collection': 'timeline',
+          'userToken': self.userid,
+          'callbackUrl': util.get_full_url(self, '/notify')
+      }
+      # self.mirror_service is initialized in util.auth_required.
+      self.mirror_service.subscriptions().insert(body=body).execute()
 
   def _new_counter(self):
     """Insert a timeline item."""
@@ -196,34 +215,23 @@ class MainHandler(webapp2.RequestHandler):
         'name': self.request.get('name'),
         'num': self._get_num(self.request.get('num'))
         }
-    CustomItemFields.set_multiple(
+    custom_item_fields.set_multiple(
         body, new_fields, TIMELINE_ITEM_TEMPLATE_URL)
 
     # self.mirror_service is initialized in util.auth_required.
     self.mirror_service.timeline().insert(body=body).execute()
 
-    # Subscribe to timeline notifications if needed
-    subscriptions = self.mirror_service.subscriptions().list().execute()
-    need_subscribe = True
-    for subscription in subscriptions.get('items', []):
-      if subscription.get('collection') == 'timeline':
-        need_subscribe = False
-
-    if need_subscribe:
-      logging.info('Subscribing to Timeline')
-      # self.userid is initialized in util.auth_required.
-      body = {'collection': 'timeline',
-              'userToken': self.userid,
-              'callbackUrl': util.get_full_url(self, '/notify')
-             }
-    # self.mirror_service is initialized in util.auth_required.
-      try:
-        self.mirror_service.subscriptions().insert(body=body).execute()
-      except HttpError:
-        return ('A new counter was created, but notifications were not '
-            'enabled. HTTPS connection required.')
+    # Subscribe to timeline notifications if not yet subscribed. A 
+    # subscription should have been made during initial OAuth grant
+    # but user could have unsubscribed via /subscription for debugging.
+    try:
+      self._subscribe()
+    except HttpError:
+      return ('A new counter was created, but notifications were not '
+          'enabled. HTTPS connection required.')
 
     return  'A new counter has been created.'
+
 
 MAIN_ROUTES = [
     ('/', MainHandler)
