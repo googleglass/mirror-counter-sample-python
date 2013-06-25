@@ -73,8 +73,8 @@ class NotifyHandler(webapp2.RequestHandler):
         # possible actions are functions listed in PROCESS_OPTIONS
         custom_item_fields.set(
             item, 'num', PROCESS_OPTIONS[option](num), TIMELINE_ITEM_TEMPLATE_URL)
-      if 'notification' in item:
-        item.pop('notification')
+        if 'notification' in item:
+          item.pop('notification')
         self.mirror_service.timeline().update(
             id=data['itemId'], body=item).execute()
 	# Only handle the first successful action.
