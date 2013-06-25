@@ -30,10 +30,10 @@ import util
 
 
 PROCESS_OPTIONS = {
-        'increment': lambda num: num + 1,
-        'decrement': lambda num: num - 1,
-        'reset': lambda num: 0
-    }
+    'increment': lambda num: num + 1,
+    'decrement': lambda num: num - 1,
+    'reset': lambda num: 0
+}
 
 
 class NotifyHandler(webapp2.RequestHandler):
@@ -55,9 +55,10 @@ class NotifyHandler(webapp2.RequestHandler):
     """Handle timeline notification.
     This method handles when a user chooses to perform a custom menu option
     (increment, decrement, reset). 
-    """ 
-    # TODO: Race conditions occur if a user rapidly selects a menu item many times
-    # (concurrently reading and writing the same timeline item). Resolve this issue
+    """
+    # TODO: Race conditions occur if a user rapidly selects a menu item many 
+    #       times (concurrently reading and writing the same timeline item). 
+    #       Resolve this issue
     for user_action in data.get('userActions', []):
       logging.info(user_action)
       option = user_action.get('payload')

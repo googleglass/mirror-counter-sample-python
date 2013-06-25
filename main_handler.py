@@ -221,14 +221,16 @@ class MainHandler(webapp2.RequestHandler):
     # self.mirror_service is initialized in util.auth_required.
     self.mirror_service.timeline().insert(body=body).execute()
 
-    # Subscribe to timeline notifications if not yet subscribed. A 
+    # Subscribe to timeline notifications if not yet subscribed. A
     # subscription should have been made during initial OAuth grant
     # but user could have unsubscribed via /subscription for debugging.
     try:
       self._subscribe()
     except HttpError:
-      return ('A new counter was created, but notifications were not '
-          'enabled. HTTPS connection required.')
+      return (
+          'A new counter was created, but notifications were not '
+          'enabled. HTTPS connection required.'
+      )
 
     return  'A new counter has been created.'
 
