@@ -53,11 +53,12 @@ class NotifyHandler(webapp2.RequestHandler):
 
   def _handle_timeline_notification(self, data):
     """Handle timeline notification.
-    This method handles when a user chooses to perform a custom menu option
-    (increment, decrement, reset). 
+
+    This method handles when a user chooses to perform a custom menu optio
+    (increment, decrement, reset).
     """
-    # TODO: Race conditions occur if a user rapidly selects a menu item many 
-    #       times (concurrently reading and writing the same timeline item). 
+    # TODO: Race conditions occur if a user rapidly selects a menu item many
+    #       times (concurrently reading and writing the same timeline item).
     #       Resolve this issue
     for user_action in data.get('userActions', []):
       logging.info(user_action)
@@ -72,7 +73,8 @@ class NotifyHandler(webapp2.RequestHandler):
           num = 0
         # possible actions are functions listed in PROCESS_OPTIONS
         custom_item_fields.set(
-            item, 'num', PROCESS_OPTIONS[option](num), TIMELINE_ITEM_TEMPLATE_URL)
+            item, 'num',
+            PROCESS_OPTIONS[option](num), TIMELINE_ITEM_TEMPLATE_URL)
         if 'notification' in item:
           item.pop('notification')
         self.mirror_service.timeline().update(
