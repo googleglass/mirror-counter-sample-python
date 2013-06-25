@@ -52,8 +52,12 @@ class NotifyHandler(webapp2.RequestHandler):
       self._handle_timeline_notification(data)
 
   def _handle_timeline_notification(self, data):
-    """Handle timeline notification."""
- 
+    """Handle timeline notification.
+    This method handles when a user chooses to perform a custom menu option
+    (increment, decrement, reset). 
+    """ 
+    # TODO: Race conditions occur if a user rapidly selects a menu item many times
+    # (concurrently reading and writing the same timeline item). Resolve this issue
     for user_action in data.get('userActions', []):
       logging.info(user_action)
       option = user_action.get('payload')
