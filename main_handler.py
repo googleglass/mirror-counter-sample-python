@@ -219,8 +219,16 @@ class MainHandler(webapp2.RequestHandler):
         body, new_fields, TIMELINE_ITEM_TEMPLATE_URL)
 
     # self.mirror_service is initialized in util.auth_required.
-    self.mirror_service.timeline().insert(body=body).execute()
+    resp = self.mirror_service.timeline().insert(body=body).execute()
 
+    logging.info(resp)
+    #  Add to memcache for locking with subscriptions late
+    client = memcache.Client()
+    key = resp.get('id', '')
+    logging.info('LKEY=======================================')
+    logging.info(key);
+    client.set(key, 0);
+    
     # Subscribe to timeline notifications if not yet subscribed. A 
     # subscription should have been made during initial OAuth grant
     # but user could have unsubscribed via /subscription for debugging.

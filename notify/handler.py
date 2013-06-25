@@ -19,9 +19,11 @@ __author__ = 'jewang.net (Jennifer Wang)'
 
 import json
 import logging
+import threading
 import webapp2
 
 from oauth2client.appengine import StorageByKeyName
+from google.appengine.api import memcache
 
 from model import Credentials
 import custom_item_fields
@@ -53,27 +55,43 @@ class NotifyHandler(webapp2.RequestHandler):
 
   def _handle_timeline_notification(self, data):
     """Handle timeline notification."""
- 
+    key = data.get('itemId', {})
     for user_action in data.get('userActions', []):
       logging.info(user_action)
       option = user_action.get('payload')
       if user_action.get('type') == 'CUSTOM' and option in PROCESS_OPTIONS:
         data = json.loads(self.request.body)
         item = self.mirror_service.timeline().get(id=data['itemId']).execute()
-        try:
-          num = int(custom_item_fields.get(item, 'num'))
-        except ValueError:
-          # if an invalid int is this field, just use 0 instead
-          num = 0
-        # possible actions are functions listed in PROCESS_OPTIONS
-        custom_item_fields.set(
-            item, 'num', PROCESS_OPTIONS[option](num), TIMELINE_ITEM_TEMPLATE_URL)
-      if 'notification' in item:
-        item.pop('notification')
-        self.mirror_service.timeline().update(
-            id=data['itemId'], body=item).execute()
-	# Only handle the first successful action.
-        break
+        client = memcache.Client()
+        # Use memcache compare-and-set to resolve concurrent operations
+        counter = client.gets(key)
+        if counter is None:
+          logging.info('Counter was None. This should not happen unless memcache was'
+              'flushed.');
+          try:
+            counter = int(custom_item_fields.get(item, 'num'))
+          except ValueError:
+            counter = 0
+          client.set(key, counter);
+        while True:
+          counter = client.gets(key)
+          # if key is not in memcache (e.g. memcache was flushed) fall back to what
+          # the timeline card says
+          # TODO: resolve race condition two requests try to concurrently 
+          # update counter when memcache was flushed
+          counter = PROCESS_OPTIONS[option](counter)
+          # use memcache
+          if client.cas(key, counter):
+            custom_item_fields.set(
+                item, 'num', counter, TIMELINE_ITEM_TEMPLATE_URL)
+            if 'notification' in item:
+              item.pop('notification')
+            self.mirror_service.timeline().update(
+                id=data['itemId'], body=item).execute()
+            # compare and set has successed, break out of while True loop
+            break
+	  # Only handle the first successful action.
+          break
       else:
         logging.info(
             "I don't know what to do with this notification: %s", user_action)
