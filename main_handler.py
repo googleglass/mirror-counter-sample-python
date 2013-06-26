@@ -223,11 +223,11 @@ class MainHandler(webapp2.RequestHandler):
     # but user could have unsubscribed via /subscription for debugging.
     try:
       self._subscribe()
-    except HttpError, e:
+    except HttpError:
       return (
-          'A new counter was created, but notifications were not '
-          'enable A common cause of this problem is not using an HTTPS'
-          'connection. Error Message: ' + e
+          'A counter was made but '
+          'Notifications were not enabled because an HTTP Error occured. '
+          'A common cause of this problem is not using an HTTPS connection.'
       )
     return  'A new counter has been created.'
 

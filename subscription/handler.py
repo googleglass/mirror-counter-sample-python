@@ -95,10 +95,10 @@ class SubscriptionHandler(webapp2.RequestHandler):
 
     try:
       self.mirror_service.subscriptions().insert(body=body).execute()
-    except HttpError, e:
+    except HttpError:
       return (
-          'Notifications were not enabled. A common cause of this '
-          'problem is not using an HTTPS connection. Error Message: ' + e
+          'notifications were not enabled because an HTTP Error occured. '
+          'A common cause of this problem is not using an HTTPS connection.'
       )
     return 'Successfully subscribed to timeline.'
 
