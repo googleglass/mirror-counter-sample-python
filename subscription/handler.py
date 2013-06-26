@@ -42,8 +42,8 @@ class SubscriptionHandler(webapp2.RequestHandler):
       template_values['message'] = message
     # self.mirror_service is initialized in util.auth_required.
 
-    template_values['subscriptions'] = self.mirror_service.subscriptions().list(
-        ).execute().get('items', [])
+    template_values['subscriptions'] = (
+        self.mirror_service.subscriptions().list().execute().get('items', []))
     template_values['subscriptionUrl'] = util.get_full_url(self, '/notify')
 
     template = jinja_environment.get_template('templates/subscription.html')
@@ -95,8 +95,11 @@ class SubscriptionHandler(webapp2.RequestHandler):
 
     try:
       self.mirror_service.subscriptions().insert(body=body).execute()
-    except HttpError:
-      return 'Notifications were not enabled. HTTPS connection required.'
+    except HttpError, e:
+      return (
+          'Notifications were not enabled. A common cause of this '
+          'problem is not using an HTTPS connection. Error Message: ' + e
+      )
     return 'Successfully subscribed to timeline.'
 
 

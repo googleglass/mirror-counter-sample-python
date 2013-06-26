@@ -51,6 +51,14 @@ class NotifyHandler(webapp2.RequestHandler):
     if data.get('collection') == 'timeline':
       self._handle_timeline_notification(data)
 
+  @staticmethod
+  def _get_num(num):
+    """Parses num into int. Returns 0 if num is invalid."""
+    try:
+      return int(num)
+    except ValueError:
+      return 0
+
   def _handle_timeline_notification(self, data):
     """Handle timeline notification.
 
@@ -66,11 +74,7 @@ class NotifyHandler(webapp2.RequestHandler):
       if user_action.get('type') == 'CUSTOM' and option in PROCESS_OPTIONS:
         data = json.loads(self.request.body)
         item = self.mirror_service.timeline().get(id=data['itemId']).execute()
-        try:
-          num = int(custom_item_fields.get(item, 'num'))
-        except ValueError:
-          # if an invalid int is this field, just use 0 instead
-          num = 0
+        num = self._get_num(custom_item_fields.get(item, 'num'))
         # possible actions are functions listed in PROCESS_OPTIONS
         custom_item_fields.set(
             item, 'num',

@@ -71,7 +71,7 @@ class MainHandler(webapp2.RequestHandler):
     timeline_items = timeline.get('items', [])
 
     # sort timeline items
-    timeline_items = sorted(timeline_items, key=lambda x: x['created'])
+    timeline_items.sort(key=lambda x: x['created'])
 
     # turn sourceItemId JSON string into a dictionary for templating
     for item in timeline_items:
@@ -158,21 +158,18 @@ class MainHandler(webapp2.RequestHandler):
   def _subscribe(self):
     """Subscribe to timeline notifications if not yet subscribed."""
     subscriptions = self.mirror_service.subscriptions().list().execute()
-    need_subscribe = True
     for subscription in subscriptions.get('items', []):
       if subscription.get('collection') == 'timeline':
-        need_subscribe = False
-
-    if need_subscribe:
-      logging.info('Subscribing to Timeline')
-      # self.userid is initialized in util.auth_required.
-      body = {
-          'collection': 'timeline',
-          'userToken': self.userid,
-          'callbackUrl': util.get_full_url(self, '/notify')
-      }
-      # self.mirror_service is initialized in util.auth_required.
-      self.mirror_service.subscriptions().insert(body=body).execute()
+        return
+    logging.info('Subscribing to Timeline')
+    # self.userid is initialized in util.auth_required.
+    body = {
+        'collection': 'timeline',
+        'userToken': self.userid,
+        'callbackUrl': util.get_full_url(self, '/notify')
+    }
+    # self.mirror_service is initialized in util.auth_required.
+    self.mirror_service.subscriptions().insert(body=body).execute()
 
   def _new_counter(self):
     """Insert a timeline item."""
@@ -214,7 +211,7 @@ class MainHandler(webapp2.RequestHandler):
     new_fields = {
         'name': self.request.get('name'),
         'num': self._get_num(self.request.get('num'))
-        }
+    }
     custom_item_fields.set_multiple(
         body, new_fields, TIMELINE_ITEM_TEMPLATE_URL)
 
@@ -226,12 +223,12 @@ class MainHandler(webapp2.RequestHandler):
     # but user could have unsubscribed via /subscription for debugging.
     try:
       self._subscribe()
-    except HttpError:
+    except HttpError, e:
       return (
           'A new counter was created, but notifications were not '
-          'enabled. HTTPS connection required.'
+          'enable A common cause of this problem is not using an HTTPS'
+          'connection. Error Message: ' + e
       )
-
     return  'A new counter has been created.'
 
 
