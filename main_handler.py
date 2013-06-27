@@ -115,13 +115,6 @@ class MainHandler(webapp2.RequestHandler):
         id=self.request.get('itemId')).execute()
     return 'Counter Deleted'
 
-  @staticmethod
-  def _get_num(num):
-    """Parses num into int. Returns 0 if num is invalid."""
-    try:
-      return int(num)
-    except ValueError:
-      return 0
 
   def _update_counter(self):
     """Updates the counter to user input for given timeline item."""
@@ -130,7 +123,7 @@ class MainHandler(webapp2.RequestHandler):
 
     new_fields = {
         'name': self.request.get('name'),
-        'num': self._get_num(self.request.get('num'))
+        'num': util.get_num(self.request.get('num'))
     }
     custom_item_fields.set_multiple(
         item, new_fields, TIMELINE_ITEM_TEMPLATE_URL)
@@ -210,7 +203,7 @@ class MainHandler(webapp2.RequestHandler):
     }
     new_fields = {
         'name': self.request.get('name'),
-        'num': self._get_num(self.request.get('num'))
+        'num': util.get_num(self.request.get('num'))
     }
     custom_item_fields.set_multiple(
         body, new_fields, TIMELINE_ITEM_TEMPLATE_URL)

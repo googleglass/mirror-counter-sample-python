@@ -91,3 +91,11 @@ def auth_required(handler_method):
     else:
       handler_method(self, *args)
   return check_auth
+
+
+def get_num(num):
+  """Parses num into int. Returns 0 if num is invalid."""
+  try:
+    return int(num)
+  except ValueError:
+    return 0

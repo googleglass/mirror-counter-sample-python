@@ -3,7 +3,7 @@ Counter for Glass
 
 Sample counter Glassware written in Python.
 
-[Online Demo](https://mirror-counter-sample-python.appspot.com/)
+[**Link to Online Demo**](https://mirror-counter-sample-python.appspot.com/)
 
 To create a counter, a user accesses a web UI hosted on Google App Engine
 and sets a name and starting number. Counters appear on Glass devices as 
